@@ -1,0 +1,28 @@
+{
+  "name": "qorechain-lightnode",
+  "version": "1.0.0",
+  "description": "Light node client for the QoreChain network. Provides two editions:",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qorechain/qorechain-lightnode.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qorechain/qorechain-lightnode/issues"
+  },
+  "homepage": "https://github.com/qorechain/qorechain-lightnode#readme",
+  "dependencies": {
+    "axios": "^1.16.0",
+    "node-cron": "^4.2.1",
+    "telegraf": "^4.16.3"
+  }
+}

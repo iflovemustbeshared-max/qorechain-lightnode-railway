@@ -61,10 +61,10 @@ log_format = "text"
 EOF
 fi
 
-# Start monitoring script in background if Telegram is configured
+# Start monitoring bot in background if Telegram is configured
 if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-    echo "Starting Telegram monitor..."
-    python3 /usr/local/bin/monitor.py &
+    echo "Starting Telegram interactive bot..."
+    node bot.js &
 fi
 
 # Start the node
