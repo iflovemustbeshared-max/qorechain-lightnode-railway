@@ -18,7 +18,7 @@ RUN CGO_ENABLED=1 go build -o /build/lightnode-ux ./cmd/lightnode-ux/
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
+    ca-certificates python3 python3-requests \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /build/lightnode-sx /usr/local/bin/lightnode-sx
@@ -31,6 +31,9 @@ RUN mkdir -p /root/.qorechain-lightnode
 
 # Expose port for UX dashboard
 EXPOSE 8420
+
+# Copy monitoring script
+COPY monitor.py /usr/local/bin/monitor.py
 
 # Use a script to handle startup and config generation
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
