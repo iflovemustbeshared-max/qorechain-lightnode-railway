@@ -1,0 +1,39 @@
+# Build stage
+FROM golang:1.26.1-bookworm AS builder
+
+WORKDIR /build
+
+# Copy module files first for layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+
+# Build both binaries
+RUN CGO_ENABLED=1 go build -o /build/lightnode-sx ./cmd/lightnode-sx/
+RUN CGO_ENABLED=1 go build -o /build/lightnode-ux ./cmd/lightnode-ux/
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/lightnode-sx /usr/local/bin/lightnode-sx
+COPY --from=builder /build/lightnode-ux /usr/local/bin/lightnode-ux
+COPY --from=builder /build/lib/linux_amd64/libqorepqc.so /usr/lib/libqorepqc.so
+RUN ldconfig
+
+# Create data directory
+RUN mkdir -p /root/.qorechain-lightnode
+
+# Expose port for UX dashboard
+EXPOSE 8420
+
+# Use a script to handle startup and config generation
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
