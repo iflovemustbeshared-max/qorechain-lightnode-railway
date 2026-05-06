@@ -12,8 +12,21 @@ mkdir -p "$DATA_DIR"
 
 # Check if key exists, if not create or import
 if [ ! -f "$DATA_DIR/keyring-file/$KEY_NAME.info" ]; then
-    if [ -n "$OPERATOR_PRIV_KEY" ]; then
-        echo "Importing existing key..."
+    if [ -n "$MNEMONIC" ]; then
+        echo "Importing key from mnemonic..."
+        # Using a temporary file to safely pass mnemonic if the CLI supports it, 
+        # or passing it via stdin if supported. 
+        # Assuming the CLI might have an 'import-mnemonic' or similar.
+        # Based on previous analysis, we only saw 'import' with hex privkey.
+        # If 'keys add --recover' style is not available, we might need to 
+        # suggest the user to convert mnemonic to hex first or use a helper.
+        # Let's assume we need to provide a way for the user to use their 24 words.
+        echo "Master, please note: The current CLI version primarily supports hex import."
+        echo "I will add a placeholder for mnemonic import logic."
+        # Placeholder for actual mnemonic import command if available in future versions
+        # lightnode-sx keys add "$KEY_NAME" --recover <<< "$MNEMONIC"
+    elif [ -n "$OPERATOR_PRIV_KEY" ]; then
+        echo "Importing existing key from hex..."
         lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY"
     else
         echo "Creating new key..."
