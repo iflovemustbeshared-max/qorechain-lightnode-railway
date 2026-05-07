@@ -1,31 +1,16 @@
 #!/bin/bash
 set -e
 
-# Default values
 NODE_TYPE=${NODE_TYPE:-sx}
 KEY_NAME=${KEY_NAME:-operator}
 DATA_DIR="/root/.qorechain-lightnode"
 CONFIG_PATH="$DATA_DIR/config.toml"
 
-# Ensure data directory exists
 mkdir -p "$DATA_DIR"
 
-# Check if key exists, if not create or import
+# ── Key setup ────────────────────────────────────────────────
 if [ ! -f "$DATA_DIR/keyring-file/$KEY_NAME.info" ]; then
-    if [ -n "$MNEMONIC" ]; then
-        echo "Importing key from mnemonic..."
-        # Using a temporary file to safely pass mnemonic if the CLI supports it, 
-        # or passing it via stdin if supported. 
-        # Assuming the CLI might have an 'import-mnemonic' or similar.
-        # Based on previous analysis, we only saw 'import' with hex privkey.
-        # If 'keys add --recover' style is not available, we might need to 
-        # suggest the user to convert mnemonic to hex first or use a helper.
-        # Let's assume we need to provide a way for the user to use their 24 words.
-        echo "Master, please note: The current CLI version primarily supports hex import."
-        echo "I will add a placeholder for mnemonic import logic."
-        # Placeholder for actual mnemonic import command if available in future versions
-        # lightnode-sx keys add "$KEY_NAME" --recover <<< "$MNEMONIC"
-    elif [ -n "$OPERATOR_PRIV_KEY" ]; then
+    if [ -n "$OPERATOR_PRIV_KEY" ]; then
         echo "Importing existing key from hex..."
         lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" --type dilithium5
     else
@@ -34,18 +19,15 @@ if [ ! -f "$DATA_DIR/keyring-file/$KEY_NAME.info" ]; then
     fi
 fi
 
-# Generate config.toml if it doesn't exist
+# ── Config setup ─────────────────────────────────────────────
 if [ ! -f "$CONFIG_PATH" ]; then
-    echo "Generating default config..."
-    # Start and immediately stop to generate default config if the app supports it, 
-    # or we can manually create a minimal one.
-    # Since we don't have a 'init' command, we'll create a basic one.
+    echo "Generating config..."
     cat <<EOF > "$CONFIG_PATH"
 node_type = "$NODE_TYPE"
-version = "2.6.0"
+version = "2.12.0"
 chain_id = "${CHAIN_ID:-qorechain-diana}"
-rpc_addr = "${RPC_ADDR:-http://rpc.qorechain.org:26657}"
-grpc_addr = "${GRPC_ADDR:-rpc.qorechain.org:9090}"
+rpc_addr = "${RPC_ADDR:-http://localhost:26657}"
+grpc_addr = "${GRPC_ADDR:-localhost:9090}"
 data_dir = "$DATA_DIR"
 key_name = "$KEY_NAME"
 keyring_backend = "test"
@@ -74,13 +56,14 @@ log_format = "text"
 EOF
 fi
 
-# Start monitoring bot in background if Telegram is configured
+# ── Telegram bot (opsional) ───────────────────────────────────
 if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-    echo "Starting Telegram interactive bot..."
-    node bot.js &
+    echo "Starting Telegram bot..."
+    cd /app && node bot.js &
 fi
 
-# Start the node
+# ── Start node ───────────────────────────────────────────────
+echo "Starting lightnode-$NODE_TYPE..."
 if [ "$NODE_TYPE" == "ux" ]; then
     exec lightnode-ux start --config "$CONFIG_PATH"
 else
