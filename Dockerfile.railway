@@ -13,8 +13,8 @@ RUN go mod download
 COPY . .
 
 # Build both binaries
-RUN CGO_ENABLED=1 go build -o /build/lightnode-sx ./cmd/lightnode-sx/
-RUN CGO_ENABLED=1 go build -o /build/lightnode-ux ./cmd/lightnode-ux/
+RUN CGO_ENABLED=1 go build -v -o /build/lightnode-sx ./cmd/lightnode-sx/ 2>&1
+RUN CGO_ENABLED=1 go build -v -o /build/lightnode-ux ./cmd/lightnode-ux/ 2>&1
 
 # Runtime stage
 FROM debian:bookworm-slim
