@@ -24,13 +24,12 @@ if [ ! -f "$KEY_FILE" ]; then
     fi
 fi
 
-# ── Config setup ─────────────────────────────────────────────
-if [ ! -f "$CONFIG_PATH" ]; then
-    echo "Generating config..."
-    DASHBOARD_ENABLED="false"
-    [ "$NODE_TYPE" == "ux" ] && DASHBOARD_ENABLED="true"
+# ── Config setup (selalu overwrite) ──────────────────────────
+echo "Generating config..."
+DASHBOARD_ENABLED="false"
+[ "$NODE_TYPE" == "ux" ] && DASHBOARD_ENABLED="true"
 
-    cat > "$CONFIG_PATH" <<EOF
+cat > "$CONFIG_PATH" <<EOF
 node_type = "$NODE_TYPE"
 version = "2.12.0"
 chain_id = "${CHAIN_ID:-qorechain-diana}"
@@ -62,7 +61,6 @@ bind_addr = "0.0.0.0:${PORT:-8420}"
 log_level = "${LOG_LEVEL:-info}"
 log_format = "text"
 EOF
-fi
 
 # ── Telegram bot (opsional) ───────────────────────────────────
 if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
@@ -73,7 +71,7 @@ fi
 # ── Start node ───────────────────────────────────────────────
 echo "Starting lightnode-$NODE_TYPE..."
 if [ "$NODE_TYPE" == "ux" ]; then
-    exec printf '%s\n' "$KEYRING_PASSWORD" | lightnode-ux start --config "$CONFIG_PATH"
+    exec lightnode-ux start --config "$CONFIG_PATH"
 else
-    exec printf '%s\n' "$KEYRING_PASSWORD" | lightnode-sx start --config "$CONFIG_PATH"
+    exec lightnode-sx start --config "$CONFIG_PATH"
 fi
