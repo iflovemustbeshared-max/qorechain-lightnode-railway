@@ -48,7 +48,7 @@ rpc_addr = "${RPC_ADDR:-http://rpc.qorechain.org:26657}"
 grpc_addr = "${GRPC_ADDR:-rpc.qorechain.org:9090}"
 data_dir = "$DATA_DIR"
 key_name = "$KEY_NAME"
-keyring_backend = "file"
+keyring_backend = "test"
 
 [delegation]
 auto_compound = true
