@@ -9,7 +9,7 @@ CONFIG_PATH="$DATA_DIR/config.toml"
 
 mkdir -p "$DATA_DIR"
 
-# ── Config DULU sebelum apapun ────────────────────────────────
+# ── Config (selalu overwrite) ─────────────────────────────────
 DASHBOARD_ENABLED="false"
 [ "$NODE_TYPE" == "ux" ] && DASHBOARD_ENABLED="true"
 
@@ -48,10 +48,11 @@ EOF
 
 echo "Config generated."
 
-# ── Key setup SETELAH config ada ─────────────────────────────
-KEY_FILE="$DATA_DIR/keyring-file/$KEY_NAME.info"
+# ── Key setup (ignore jika sudah ada) ────────────────────────
+KEY_EXISTS=$(printf '%s\n' "$KEYRING_PASSWORD" | \
+    lightnode-sx keys list --config "$CONFIG_PATH" 2>/dev/null | grep -c "$KEY_NAME" || true)
 
-if [ ! -f "$KEY_FILE" ]; then
+if [ "$KEY_EXISTS" -eq 0 ]; then
     if [ -n "$OPERATOR_PRIV_KEY" ]; then
         echo "Importing existing key from hex..."
         printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
@@ -63,6 +64,8 @@ if [ ! -f "$KEY_FILE" ]; then
             lightnode-sx keys create "$KEY_NAME" \
             --type dilithium5 --config "$CONFIG_PATH"
     fi
+else
+    echo "Key '$KEY_NAME' already exists, skipping."
 fi
 
 # ── Telegram bot ──────────────────────────────────────────────
