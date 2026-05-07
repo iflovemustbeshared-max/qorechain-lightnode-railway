@@ -3,26 +3,34 @@ set -e
 
 NODE_TYPE=${NODE_TYPE:-sx}
 KEY_NAME=${KEY_NAME:-operator}
+KEYRING_PASSWORD=${KEYRING_PASSWORD:-qorechain123}
 DATA_DIR="/root/.qorechain-lightnode"
 CONFIG_PATH="$DATA_DIR/config.toml"
 
 mkdir -p "$DATA_DIR"
 
 # ── Key setup ────────────────────────────────────────────────
-if [ ! -f "$DATA_DIR/keyring-file/$KEY_NAME.info" ]; then
+KEY_FILE="$DATA_DIR/keyring-file/$KEY_NAME.info"
+
+if [ ! -f "$KEY_FILE" ]; then
     if [ -n "$OPERATOR_PRIV_KEY" ]; then
         echo "Importing existing key from hex..."
-        lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" --type dilithium5
+        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
+            lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" --type dilithium5
     else
         echo "Creating new key..."
-        lightnode-sx keys create "$KEY_NAME" --type dilithium5
+        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
+            lightnode-sx keys create "$KEY_NAME" --type dilithium5
     fi
 fi
 
 # ── Config setup ─────────────────────────────────────────────
 if [ ! -f "$CONFIG_PATH" ]; then
     echo "Generating config..."
-    cat <<EOF > "$CONFIG_PATH"
+    DASHBOARD_ENABLED="false"
+    [ "$NODE_TYPE" == "ux" ] && DASHBOARD_ENABLED="true"
+
+    cat > "$CONFIG_PATH" <<EOF
 node_type = "$NODE_TYPE"
 version = "2.12.0"
 chain_id = "${CHAIN_ID:-qorechain-diana}"
@@ -30,7 +38,7 @@ rpc_addr = "${RPC_ADDR:-http://localhost:26657}"
 grpc_addr = "${GRPC_ADDR:-localhost:9090}"
 data_dir = "$DATA_DIR"
 key_name = "$KEY_NAME"
-keyring_backend = "test"
+keyring_backend = "file"
 
 [delegation]
 auto_compound = true
@@ -47,7 +55,7 @@ bridge_interval = "60s"
 tokenomics_interval = "60s"
 
 [dashboard]
-enabled = $([ "$NODE_TYPE" == "ux" ] && echo "true" || echo "false")
+enabled = $DASHBOARD_ENABLED
 bind_addr = "0.0.0.0:${PORT:-8420}"
 
 [logging]
@@ -65,7 +73,7 @@ fi
 # ── Start node ───────────────────────────────────────────────
 echo "Starting lightnode-$NODE_TYPE..."
 if [ "$NODE_TYPE" == "ux" ]; then
-    exec lightnode-ux start --config "$CONFIG_PATH"
+    exec printf '%s\n' "$KEYRING_PASSWORD" | lightnode-ux start --config "$CONFIG_PATH"
 else
-    exec lightnode-sx start --config "$CONFIG_PATH"
+    exec printf '%s\n' "$KEYRING_PASSWORD" | lightnode-sx start --config "$CONFIG_PATH"
 fi
