@@ -9,23 +9,7 @@ CONFIG_PATH="$DATA_DIR/config.toml"
 
 mkdir -p "$DATA_DIR"
 
-# ── Key setup ────────────────────────────────────────────────
-KEY_FILE="$DATA_DIR/keyring-file/$KEY_NAME.info"
-
-if [ ! -f "$KEY_FILE" ]; then
-    if [ -n "$OPERATOR_PRIV_KEY" ]; then
-        echo "Importing existing key from hex..."
-        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
-            lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" --type dilithium5
-    else
-        echo "Creating new key..."
-        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
-            lightnode-sx keys create "$KEY_NAME" --type dilithium5
-    fi
-fi
-
-# ── Config setup (selalu overwrite) ──────────────────────────
-echo "Generating config..."
+# ── Config DULU sebelum apapun ────────────────────────────────
 DASHBOARD_ENABLED="false"
 [ "$NODE_TYPE" == "ux" ] && DASHBOARD_ENABLED="true"
 
@@ -62,13 +46,32 @@ log_level = "${LOG_LEVEL:-info}"
 log_format = "text"
 EOF
 
-# ── Telegram bot (opsional) ───────────────────────────────────
+echo "Config generated."
+
+# ── Key setup SETELAH config ada ─────────────────────────────
+KEY_FILE="$DATA_DIR/keyring-file/$KEY_NAME.info"
+
+if [ ! -f "$KEY_FILE" ]; then
+    if [ -n "$OPERATOR_PRIV_KEY" ]; then
+        echo "Importing existing key from hex..."
+        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
+            lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" \
+            --type dilithium5 --config "$CONFIG_PATH"
+    else
+        echo "Creating new key..."
+        printf '%s\n%s\n' "$KEYRING_PASSWORD" "$KEYRING_PASSWORD" | \
+            lightnode-sx keys create "$KEY_NAME" \
+            --type dilithium5 --config "$CONFIG_PATH"
+    fi
+fi
+
+# ── Telegram bot ──────────────────────────────────────────────
 if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
     echo "Starting Telegram bot..."
     cd /app && node bot.js &
 fi
 
-# ── Start node ───────────────────────────────────────────────
+# ── Start node ────────────────────────────────────────────────
 echo "Starting lightnode-$NODE_TYPE..."
 if [ "$NODE_TYPE" == "ux" ]; then
     exec lightnode-ux start --config "$CONFIG_PATH"
