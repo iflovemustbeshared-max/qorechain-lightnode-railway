@@ -27,7 +27,7 @@ if [ ! -f "$DATA_DIR/keyring-file/$KEY_NAME.info" ]; then
         # lightnode-sx keys add "$KEY_NAME" --recover <<< "$MNEMONIC"
     elif [ -n "$OPERATOR_PRIV_KEY" ]; then
         echo "Importing existing key from hex..."
-        lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY"
+        lightnode-sx keys import "$KEY_NAME" "$OPERATOR_PRIV_KEY" --type dilithium5
     else
         echo "Creating new key..."
         lightnode-sx keys create "$KEY_NAME" --type dilithium5
