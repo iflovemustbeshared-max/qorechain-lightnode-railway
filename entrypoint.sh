@@ -81,3 +81,9 @@ if [ "$NODE_TYPE" == "ux" ]; then
 else
     exec lightnode-sx start --config "$CONFIG_PATH"
 fi
+
+# ── Reset key jika diminta ────────────────────────────────────
+if [ "${RESET_KEY}" == "true" ]; then
+    echo "Resetting keyring..."
+    rm -rf "$DATA_DIR/keyring-file"
+fi
